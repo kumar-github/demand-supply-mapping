@@ -1,0 +1,250 @@
+# Includes: java, maven, intellij, macos
+
+### Universal ###
+# Common files that should be ignored in all projects
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*~
+*.bak
+
+# Environment files (containing secrets, API keys, credentials)
+.env
+*.env
+.env.*
+
+# Local configuration that shouldn't be shared
+*.local
+
+### Java ###
+# Compiled bytecode and packaged artifacts
+*.class
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# Generic build output directories
+bin/
+build/
+
+# Eclipse-specific project files
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+*.launch
+
+### Maven ###
+# Build output
+target/
+
+# Release / versions plugin artifacts
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+*.versionsBackup
+
+# Shade plugin / build-number plugin artifacts
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Build status and generated-source metadata
+maven-status/
+maven-archiver/
+generated-sources/
+generated-test-sources/
+maven-compiler-plugin/
+maven-metadata.xml
+maven-metadata-local.xml
+.maven-classpath
+
+# Eclipse m2e integration
+maven-eclipse.xml
+
+# Local repository cache directories (various naming conventions)
+.m2/
+maven/
+.maven/
+maven-repository/
+.maven-cache/
+.maven_repos/
+
+### Intellij ###
+# Core IDE project/workspace metadata
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+out/
+
+# Backup files
+*.iml.bak
+*.ipr.bak
+*.iws.bak
+.idea_backup/
+
+### Macos ###
+# Finder metadata
+.DS_Store
+.DS_Store?
+.AppleDouble
+*.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Volume / disk image artifacts
+.VolumeIcon.icns
+.apdisk
+*.icloud
+
+# Files that can appear on network or external volumes
+.Spotlight-V100
+.Spotlight-V100/
+.TemporaryItems
+Temporary Items
+.Trashes
+.Trashes/
+Network Trash Folder
+Network Trash Folder/
+.com.apple.timemachine.donotpresent
+.fseventsd
+.DocumentRevisions-V100
+.AppleDB
+*.AppleDB
+.AppleDB/
+.AppleDesktop
+.AppleDesktop/
+*.swp
+
+
+# ============================================================
+# Java / Maven
+# ============================================================
+
+# Maven wrapper generated/repository files
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ============================================================
+# IntelliJ IDEA
+# ============================================================
+
+# IntelliJ project-specific files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+
+# ============================================================
+# VS Code
+# ============================================================
+
+.vscode/
+
+# ============================================================
+# Node.js / npm
+# ============================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# npm cache / logs
+.npm/
+
+# ============================================================
+# Svelte / Vite
+# ============================================================
+
+# Vite build output
+dist/
+
+# Svelte generated files
+.svelte-kit/
+
+# ============================================================
+# Vaadin
+# ============================================================
+
+# Vaadin generated frontend/build files
+.vaadin/
+
+# Vaadin frontend generated files
+frontend/generated/
+
+# ============================================================
+# Playwright
+# ============================================================
+
+# Playwright test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# ============================================================
+# Environment / secrets
+# ============================================================
+.env.local
+.env.*.local
+
+# Keep example environment files
+!.env.example
+
+# ============================================================
+# macOS
+# ============================================================
+
+# macOS Finder metadata
+
+# ============================================================
+# Java / IDE temporary files
+# ============================================================
+
+# ============================================================
+# Logs
+# ============================================================
+
+# ============================================================
+# Docker
+# ============================================================
+
+# Docker override files
+docker-compose.override.yml
+
+# Local Docker environment files
+docker.env
+
+# ============================================================
+# OS / editor temporary files
+# ============================================================
+*.swo
+
+
+/target/
+.settings
+
+# The following files are generated/updated by vaadin-maven-plugin
+src/main/frontend/generated/
+vite.generated.ts

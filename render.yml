@@ -1,0 +1,35 @@
+version: "1"
+services:
+  - type: web
+    name: demand-supply-mapping-service
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    repo: https://github.com/kumar-github/demand-supply-mapping
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: demand-supply-mapping-postgres-instance
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: demand-supply-mapping-postgres-instance
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: demand-supply-mapping-postgres-instance
+          property: password
+    region: singapore
+    dockerContext: .
+    autoDeployTrigger: commit
+
+databases:
+  - name: demand-supply-mapping-postgres-instance
+    databaseName: demand_supply_mapping_db
+    user: demand_supply_mapping_db_user
+    plan: free
+    region: singapore
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+    postgresMajorVersion: "18"

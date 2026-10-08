@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: demand-supply-mapping
+
+  datasource:
+    # Env-var driven so the same jar runs unchanged against local Postgres
+    # (the defaults below) or a cloud Postgres (Render/Railway/etc. inject
+    # SPRING_DATASOURCE_URL/USERNAME/PASSWORD as real env vars, which Spring
+    # Boot's relaxed binding picks up automatically — no code change needed
+    # per environment). See DEPLOY.md for exactly what to set where.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/demand_supply_mapping_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      # Flyway owns schema changes; Hibernate must never auto-alter the
+      # tables that supply_overrides/demand_candidate_decisions/etc. FK
+      # against.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+vaadin:
+  # Vaadin's production/dev-mode switch; leave dev tooling on until a
+  # deployment pipeline exists.
+  launch-browser: false
+  allowed-packages:
+    - com.vaadin
+    - org.vaadin
+    - com.example
+    - com.flowingcode
+
+server:
+  # Render/Railway/most PaaS inject $PORT and expect the app to bind to it;
+  # defaults to 8080 for local/Docker-with-a-fixed-port use.
+  port: ${PORT:8080}
+
+#logging:
+#  level:
+#    org: atmosphere=warn

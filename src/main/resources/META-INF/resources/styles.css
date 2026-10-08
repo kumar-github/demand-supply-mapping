@@ -1,0 +1,1394 @@
+.app-logo {
+    border-radius: min(40%, var(--vaadin-radius-m));
+    margin-inline-start: var(--vaadin-padding-inline-container);
+}
+
+.app-name {
+    font-weight: var(--aura-font-weight-semibold);
+    font-size: var(--aura-font-size-l);
+}
+
+.app-footer {
+    color: var(--vaadin-text-color-secondary);
+    font-size: var(--aura-font-size-s);
+}
+
+/* ==========================================================================================
+   Bench Match brand shell + dashboard — rebuilt to match the approved design mock
+   (Main.dc.html) pixel-for-pixel. This is a fixed, static brand palette, so these ".bm-*"
+   rules intentionally use the mock's literal hex/px values rather than Aura design tokens — a
+   deliberate exception to "always use tokens", because the goal here is matching an approved
+   visual design exactly, not theme adaptivity. Aura/Vaadin tokens are still used everywhere
+   else (Supply/Demand/Upload/Shortlist keep the stock look).
+
+   A dark-mode toggle (shell + stock Aura views getting a real dark variant via
+   Page#setColorScheme / the `theme="dark"` attribute) existed briefly (2026-10-02/03) but was
+   removed entirely (2026-10-03) per a deliberate decision to drop the feature rather than
+   finish it for the Dashboard route too. There is no color-scheme switching left anywhere in
+   this app — light-only, matching the mock.
+
+   One real bug fix from that period is still worth keeping noted: `.bm-shell` used to set
+   `color: var(--bm-ink)` globally, and plain CSS `color` is inherited across the shadow-DOM
+   boundary into any component that doesn't set its own (e.g. Grid's cell text). That pinned
+   Grid/VerticalLayout/etc. text to the mock's ink color regardless of Aura's own background,
+   which was fine in a light-only app but would have made grid rows unreadable under the old
+   dark-mode attempt. Fix (kept): `.bm-shell` no longer sets `color` at all — content outside
+   `.bm-dash` inherits Aura's own text color — and `.bm-dash`/`.bm-header-title` set the mock's
+   ink color explicitly instead of relying on inheriting it from the shell.
+
+   2026-10-06: page background/border repainted from the mock's original warm cream
+   (--bm-content-bg: #f6f4ef, --bm-border: #e6e1d6) to a cool "soft blue-gray" pair
+   (--bm-content-bg: #eef1f5, --bm-border: #dde2e8), picked after live-comparing several
+   options. Also added --bm-card-shadow/--bm-card-shadow-hover: cards previously relied on
+   their 1px border alone for definition, which read as flat grid lines rather than elevated
+   surfaces, especially once paired with the new, less contrasty border. Base shadow is applied
+   to every card-like surface (dashboard tiles/cards, the Review toolbar, Review queue rows,
+   candidate cards); the amplified hover variant is applied only where the whole element is a
+   click target (Review queue rows, candidate cards) — not on static tiles, and not on
+   EXHAUSTED review rows, which are deliberately not whole-card links (see that rule's existing
+   comment) so they keep the base shadow on hover, not the lift.
+   ========================================================================================== */
+
+:root {
+    --bm-navy: #15213b;
+    --bm-navy-active: #22314f;
+    /* --bm-gold: #d8a54b; */
+    --bm-accent: #4b5f52;
+    --bm-accent-text: #ffffff;
+    --bm-ink: #1c1f26;
+    --bm-muted-ink: #6b7280;
+    --bm-faint-ink: #9ca3af;
+    --bm-border: #dde2e8;
+    --bm-border-faint: #eef2f6;
+    --bm-content-bg: #eef1f5;
+    --bm-field-bg: #f8f9fb;
+    --bm-amber-bg: #fdf3e3;
+    --bm-amber-ink: #6b4510;
+    --bm-amber-ink-strong: #8a5a14;
+    --bm-red-bg: #f7eaea;
+    --bm-red-ink: #8b3a3a;
+    --bm-red-strong: #9d5b5b;
+    --bm-teal: #0f766e;
+    --bm-sage-ink-strong: #3c4f44;
+    --bm-quality-good: #c89a42;
+
+    /* Card elevation, added 2026-10-06 — see file header comment. Two-layer shadow (tight
+         contact shadow + barely-there ambient one), kept intentionally faint at rest so it reads
+         as "lifted surface" rather than a dramatic drop shadow; the hover variant roughly doubles
+         the opacity for a clear but still restrained "this is clickable" cue. */
+    --bm-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 1px rgba(16, 24, 40, 0.03);
+    --bm-card-shadow-hover: 0 3px 8px rgba(16, 24, 40, 0.1), 0 1px 3px rgba(16, 24, 40, 0.07);
+
+    /* Review queue urgency palette — distinct from the dashboard's --bm-red-strong/--bm-amber-*
+         tokens above (those are used by Dashboard's own queue rows and have different literal
+         values), lifted directly from the approved Demand Review mock (Main.dc.html). */
+    --bm-rev-overdue: #b42318;
+    --bm-rev-duesoon: #b7791f;
+    --bm-rev-ontrack: #2e7d32;
+    --bm-rev-exhausted: #9aa1ab;
+    --bm-rev-cta: #1c2b45;
+    --bm-rev-cta-hover: #142033;
+}
+
+.bm-shell {
+    display: flex;
+    font-family: "Inter", sans-serif;
+    /* No `color` here on purpose — see the file header comment. Content outside `.bm-dash`
+         (Supply/Demand/Upload/Shortlist) inherits Aura's own adaptive text color instead of a
+         hardcoded ink that would stay dark even when the background goes dark. */
+    background: var(--bm-content-bg);
+    /* Pinned to the viewport (not just min-height, which MainLayout also sets inline) with
+         overflow hidden here, so a tall ROUTED VIEW can never push the whole document taller than
+         one screen. Found 2026-10-05: Review's queue (hundreds of plain-Div rows, no Grid) was the
+         first view long enough to overflow .bm-shell's old unbounded height, and because the
+         sidebar is a normal in-flow flex child (not position:sticky/fixed), once the document grew
+         taller than one viewport the WHOLE shell — sidebar included — scrolled with it, so the
+         sidebar visually "ended" after about one screen of scrolling even though its navy
+         background should have run the full page. Fix: the shell itself never exceeds 100vh, and
+         .bm-outlet below is the one thing allowed to scroll internally, so header + sidebar now stay
+         fixed in place the way the approved mock always showed them, regardless of how long a given
+         routed view's content gets. Supply/Demand/Shortlist already use Vaadin Grid's own internal
+         virtual scroll and never relied on page-level overflow, so this was latent until Review.
+      */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ---- Sidebar ---- */
+
+.bm-sidebar {
+    width: 232px;
+    flex-shrink: 0;
+    background: var(--bm-navy);
+    display: flex;
+    flex-direction: column;
+    padding: 26px 16px;
+    box-sizing: border-box;
+}
+
+.bm-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 10px 26px 10px;
+}
+
+.bm-logo-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    /* background: var(--bm-gold); */
+    background: var(--bm-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    /* color: var(--bm-navy); */
+    color: var(--bm-accent-text);
+}
+
+.bm-brand {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #ffffff;
+    letter-spacing: 0.2px;
+}
+
+.bm-navitem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    text-decoration: none;
+    color: #c7ccda;
+    cursor: pointer;
+}
+
+.bm-navitem:hover {
+    background: var(--bm-navy-active);
+}
+
+/* RouterLink's default highlight action toggles a `highlight` ATTRIBUTE (not a CSS class) —
+   https://vaadin.com/api/platform/current/com/vaadin/flow/router/RouterLink.html */
+.bm-navitem[highlight] {
+    background: var(--bm-navy-active);
+    color: #ffffff;
+}
+
+.bm-navitem[highlight] .bm-navlabel {
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.bm-navitem-static {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.bm-navitem-static:hover {
+    background: transparent;
+}
+
+.bm-navicon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.bm-navlabel {
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.bm-navlabel-flex {
+    flex: 1;
+}
+
+.soon-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #5e6b85;
+    border: 1px solid #2a3a5c;
+    border-radius: 4px;
+    padding: 2px 5px;
+}
+
+.bm-sidebar-spacer {
+    flex: 1;
+}
+
+.bm-version {
+    font-size: 11px;
+    color: #5e6b85;
+    padding: 14px 12px 2px;
+}
+
+/* ---- Content column + header ---- */
+
+.bm-content-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Matches .bm-shell's now-fixed height — see that rule's comment. Without this, this column
+         (and .bm-outlet inside it) would still be free to grow past 100vh even though the shell
+         itself is clipped, which would just move the overflow problem down one level. */
+    height: 100%;
+    min-height: 0;
+}
+
+.bm-header {
+    height: 72px;
+    flex-shrink: 0;
+    background: #ffffff;
+    border-bottom: 1px solid var(--bm-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    box-sizing: border-box;
+}
+
+.bm-header-title {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    /* Explicit now that .bm-shell no longer sets a blanket `color` — see file header comment. */
+    color: var(--bm-ink);
+}
+
+.bm-header-right {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.bm-last-refreshed {
+    font-size: 12.5px;
+    color: var(--bm-muted-ink);
+}
+
+.bm-last-refreshed-value {
+    color: var(--bm-ink);
+    font-weight: 600;
+}
+
+/* vaadin-text-field's <input> lives in its own shadow DOM — a light-DOM "input" selector can't
+   reach it (the same mistake as the old `vaadin-drawer-panel` rule). Width is set from Java
+   instead (TextField#setWidth, a real public API); the rest is left as Aura's own stock look,
+   since this field is disabled/decorative only. */
+
+.bm-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    /* background: var(--bm-gold); */
+    background: var(--bm-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    /* color: var(--bm-navy); */
+    color: var(--bm-accent-text);
+}
+
+.bm-outlet {
+    flex: 1;
+    box-sizing: border-box;
+    /* Gives .bm-dash's `min-height: 100%` below something to resolve against, so its background
+         fully covers the outlet even when the dashboard's own content is shorter than the
+         viewport. */
+    min-height: 0;
+    /* The one thing allowed to scroll — see .bm-shell's comment. A routed view taller than the
+         viewport (Review's queue, a long Demand/Supply result set rendered outside a Grid, etc.)
+         now scrolls in place here, under the fixed header, beside the fixed sidebar, instead of
+         scrolling the whole document. */
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* ---- Dashboard view ---- */
+
+.bm-dash {
+    padding: 28px 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+    min-height: 100%;
+    /* Explicit (not inherited) so the Dashboard always shows the mock's exact light palette —
+         see file header comment. */
+    background: var(--bm-content-bg);
+    color: var(--bm-ink);
+}
+
+.bm-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.bm-kpi-tile {
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: var(--bm-card-shadow);
+}
+
+.bm-kpi-tile-highlighted {
+    border: 1.5px solid var(--bm-accent);
+}
+
+.bm-kpi-tile-highlighted .bm-kpi-value,
+.bm-kpi-tile-highlighted .bm-kpi-caption {
+    color: var(--bm-sage-ink-strong);
+}
+
+.bm-kpi-tile-muted .bm-kpi-caption {
+    color: var(--bm-faint-ink);
+    font-size: 11.5px;
+}
+
+.bm-kpi-label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--bm-muted-ink);
+    font-weight: 500;
+}
+
+.bm-kpi-value {
+    display: block;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 800;
+    font-size: 30px;
+    margin-top: 6px;
+}
+
+.bm-kpi-caption {
+    display: block;
+    font-size: 12px;
+    color: var(--bm-muted-ink);
+    margin-top: 4px;
+}
+
+.bm-kpi-caption-teal {
+    color: var(--bm-teal);
+}
+
+.bm-dash-middle-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.bm-card {
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-sizing: border-box;
+    box-shadow: var(--bm-card-shadow);
+}
+
+/* "Your queue"-style header: big Plus Jakarta Sans title, used only for the needs-attention card. */
+.bm-card-title-lg {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Plain small card header, used for every other card (match quality, etc). */
+.bm-card-title {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.bm-card-subtitle {
+    font-size: 12px;
+    color: var(--bm-faint-ink);
+    margin-top: 2px;
+}
+
+/* Fix 2026-10-07: wraps a .bm-card-title-lg + .bm-card-subtitle pair (DashboardView's "Needs
+   attention" card header, ReviewWorkspaceView's demand header) and previously had NO rules at
+   all — a plain Div, so its two Span children (inline by default) sat on the same line with
+   nothing between them, e.g. "Needs attentionLongest-benched first". display:flex column makes
+   each Span its own row; .bm-card-subtitle's existing margin-top: 2px still provides the gap. */
+.bm-card-title-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.bm-queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bm-pbtn {
+    /* background: var(--bm-gold); */
+    background: var(--bm-accent);
+    /* color: var(--bm-navy); */
+    color: var(--bm-accent-text);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    text-decoration: none;
+}
+
+.bm-pbtn:hover {
+    opacity: 0.9;
+}
+
+.bm-queue-rows {
+    border: 1px solid var(--bm-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bm-queue-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-left: 3px solid var(--bm-red-strong);
+    border-bottom: 1px solid var(--bm-border-faint);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    box-shadow: var(--bm-card-shadow);
+    transition: box-shadow 0.15s ease;
+}
+
+.bm-queue-row:hover {
+    box-shadow: var(--bm-card-shadow-hover);
+}
+
+.bm-queue-row:last-child {
+    border-bottom: none;
+}
+
+.bm-queue-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bm-border-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.bm-queue-name-line {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ---- Supply/Demand grid density ----
+   2026-10-07: feedback that the Supply/Demand grids felt "too narrow/thin" — both grids build every column with
+   setAutoWidth(true) and no flex-grow (see SupplyDemandView.buildSupplyGrid/buildDemandGrid's Javadoc for the
+   flex-grow half of this fix — folded into one class from the former separate SupplyView/DemandView), so rows
+   packed to Aura's default --aura-base-size (16, i.e. "normal" density) with no breathing room. Bumped to 18 (still
+   inside Aura's documented 12-24 range, divisible-by-4-preferred) — scoped to `.bm-grid` rather than set globally, so
+   it affects only the grids this feedback was about (Supply, Demand), not Shortlist's grid or anything else in the
+   app. --aura-base-size is inherited, and a custom property set on a light-DOM host element (plain
+   `vaadin-grid.bm-grid` here, no shadow-piercing @CssImport needed) is inherited into that element's own shadow DOM,
+   where Aura's grid internals read it back out — see https://vaadin.com/docs/latest/styling/themes/aura/other. */
+vaadin-grid.bm-grid {
+    --aura-base-size: 18;
+    /* Same min-height: 0 fix as .bm-sd-pane just below, and for the same reason — the Grid is
+       itself a flex-grow: 1 item inside its pane's own flex column (pane -> filter bar + grid), so
+       it's subject to the identical "won't shrink below intrinsic content height" default. Belt and
+       braces with .bm-sd-pane's fix: between the two, nothing in this chain can out-grow .bm-outlet
+       any more. */
+    min-height: 0;
+}
+
+.bm-sd-tabs {
+    margin-bottom: 4px;
+}
+
+/* 2026-10-08 fix: "always a vertical scrollbar on the Supply & Demand page, on top of the grid's
+   own scrollbar". SupplyDemandView's active pane (supplyPane/aafdPane/demandPane) is a flex item
+   (flex-grow: 1) inside the view's own column layout, containing a Grid.setSizeFull() — but flex
+   items default to min-height: auto, meaning a flex item won't shrink below its CONTENT's intrinsic
+   height even with flex-grow set. The Grid's own intrinsic/unclipped height (before virtualization
+   settles) was enough to push the pane, and so the whole view, a few pixels taller than .bm-outlet's
+   available height — which made .bm-outlet's own overflow-y: auto kick in too, on top of the Grid's
+   already-internal virtual scroll. min-height: 0 here is what actually lets the pane shrink to fit
+   the remaining flex space instead of growing to fit the Grid — same family of fix .bm-outlet's own
+   min-height: 0 already documents for a sibling case. */
+.bm-sd-pane {
+    min-height: 0;
+}
+
+/* ---- Flag chip (Supply/Demand page) ----
+   2026-10-07: replaces the old bare "⚠ Sub-capability mismatch" / "⚠ MAS mapping mismatch" text column. The chip
+   itself is always visible (no hover needed to notice a row is flagged).
+   2026-10-08: the original click-to-open-a-Dialog detail view was replaced with a plain hover Tooltip carrying the
+   same note text (SupplyDto.subCapabilityNote / DemandDto.masMappingNote) — see SupplyDemandView.flagChip's Javadoc
+   for the full reasoning. The chip is no longer clickable, so cursor: pointer below is gone too. */
+.bm-flag-chip-ok {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--bm-faint-ink);
+    background: var(--bm-field-bg);
+    padding: 3px 9px;
+    border-radius: 999px;
+}
+
+.bm-flag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.bm-flag-chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+}
+
+/* Amber = Supply's sub-capability mismatch, red = Demand's MAS-mapping mismatch — kept distinct rather than
+   sharing one color, matching the Review queue's own urgency palette convention (amber = caution, red = hard
+   issue) instead of inventing a third meaning. */
+.bm-flag-chip-amber {
+    background: var(--bm-amber-bg);
+    color: var(--bm-amber-ink-strong);
+}
+
+.bm-flag-chip-red {
+    background: var(--bm-red-bg);
+    color: var(--bm-red-ink);
+}
+
+.bm-queue-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.bm-queue-meta {
+    font-weight: 500;
+    color: var(--bm-faint-ink);
+    font-size: 11.5px;
+}
+
+.bm-badge-danger {
+    background: var(--bm-red-bg);
+    color: var(--bm-red-ink);
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.bm-queue-open {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--bm-navy);
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.bm-queue-more {
+    font-size: 11.5px;
+    color: var(--bm-faint-ink);
+    text-align: center;
+}
+
+.bm-queue-reconciliation {
+    font-size: 11px;
+    color: #b8bcc6;
+    text-align: center;
+    border-top: 1px solid var(--bm-border-faint);
+    padding-top: 8px;
+}
+
+.bm-quality-bar {
+    display: flex;
+    height: 14px;
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--bm-border-faint);
+}
+
+.bm-quality-bar-empty {
+    height: auto;
+    min-height: 14px;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 0;
+}
+
+.bm-quality-bar-empty-label {
+    font-size: 11px;
+    color: var(--bm-faint-ink);
+}
+
+.bm-quality-segment {
+    height: 100%;
+}
+
+.bm-quality-strong {
+    background: var(--bm-teal);
+}
+
+.bm-quality-good {
+    /* background: var(--bm-accent); */
+    background: var(--bm-quality-good);
+}
+
+.bm-quality-weak {
+    background: var(--bm-red-strong);
+}
+
+.bm-quality-legend {
+    display: flex;
+    gap: 18px;
+}
+
+.bm-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #374151;
+}
+
+.bm-legend-swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* ---- Review (demand queue + workspace), added 2026-10-05 ---- */
+
+/* Decided candidate rows (Proposed or Rejected) stay in the list rather than being removed —
+   locked-in UX decision — but fade so the reviewer's eye goes to what's still undecided. */
+.bm-candidate-row-decided {
+    opacity: 0.5;
+}
+
+.bm-candidate-row-decided:hover {
+    background: transparent;
+}
+
+/* ---- Review queue (landing page), rebuilt 2026-10-05 to match Main.dc.html pixel-for-pixel ----
+   Superseded the Grid-based approach (.bm-review-grid/.bm-badge-neutral, removed) once the actual
+   mock turned out to specify plain paginated cards (20/page, Prev/1/2/3/Next) rather than a long
+   virtualized scroll — see ReviewQueueView's Javadoc. Real client-side pagination over an
+   in-memory list is fine at this row count (hundreds, not thousands — same reasoning
+   DemandReviewService.queue()'s own Javadoc already gives for staying a plain List). */
+
+.bm-rev-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bm-rev-stats {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--bm-muted-ink);
+}
+
+.bm-rev-stats strong {
+    font-size: 15px;
+    color: var(--bm-ink);
+}
+
+.bm-rev-stat-overdue {
+    color: var(--bm-rev-overdue);
+    font-weight: 600;
+}
+
+.bm-rev-stat-duesoon {
+    color: var(--bm-rev-duesoon);
+    font-weight: 600;
+}
+
+.bm-rev-stat-nocoverage {
+    color: var(--bm-rev-cta);
+    font-weight: 600;
+}
+
+.bm-rev-stat-flagged {
+    color: var(--bm-muted-ink);
+    font-weight: 600;
+}
+
+.bm-rev-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: var(--bm-card-shadow);
+}
+
+.bm-rev-search {
+    flex: 1 1 260px;
+    min-width: 220px;
+}
+
+/* 2026-10-08, take one (superseded by the comment below): the 2026-10-07 fix above changed the
+   WRONG token but also used the wrong SELECTOR — "input" is a light-DOM descendant selector, and
+   vaadin-text-field's real <input> lives inside the component's own shadow DOM (see the
+   near-identical shadow-DOM note left near .bm-avatar, for the Dashboard's old disabled search
+   field). A light-DOM selector can't reach in there at all, so ".bm-rev-search input" was a dead
+   rule the whole time. ::part(input-field) IS the correct way to reach a Vaadin field's internal box
+   from outside its shadow DOM — but take one then set it to --bm-field-bg (#f8f9fb), assuming that
+   was "the" input color every field on this page already used. It isn't: every OTHER field here
+   (the Persona/Band/Location filters on the Supply & Demand page, for instance) has no background
+   override at all and renders Aura's own default input fill, which is plain white — #f8f9fb is a
+   deliberately distinct, slightly darker token (see :root's comment) meant for other things (e.g.
+   the flag chips' "—" pill), not for matching a plain field to its siblings. So the box one shade
+   off from white WAS this rule, not Aura's default — take two below sets the part's background to
+   plain white explicitly, matching the native fill every other field on this page already has. */
+vaadin-text-field.bm-rev-search::part(input-field) {
+    background: #ffffff;
+}
+
+.bm-rev-flagged-filter {
+    font-size: 13px;
+    color: var(--bm-muted-ink);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Carries forward onto a demand that re-enters OPEN after being flagged while EXHAUSTED — see
+   ReviewQueueView.buildRow()'s comment on why this badge isn't only in the EXHAUSTED branch. */
+.bm-rev-flagged-badge {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--bm-muted-ink);
+    white-space: nowrap;
+}
+
+/* Filter chips (Persona/Band/Location) — added 2026-10-06, wired to real queue data instead of
+   left as the approved mock's static decoration. One chip group per dimension, multi-select
+   within a group (OR), AND across groups — same combinability as the existing search box +
+   "Flagged for hiring only" checkbox.
+   2026-10-07: moved from three permanently-open rows above the list into the collapsed-by-default
+   .bm-rev-filters-panel below. Mocked up two ways before landing here — one "Filters" popover for
+   all three groups (this one) vs. three separate per-facet dropdown buttons — and picked this one
+   because narrowing the queue here is usually a multi-facet action ("Java, band E2.2, Hyderabad"),
+   which a single panel does in one open/close instead of three. Location stays a plain chip list
+   like Persona/Band for now; a searchable multi-select was mocked up too (for when the number of
+   distinct locations grows past what a chip row can hold) but deliberately deferred — revisit if
+   that list actually gets long enough to matter. */
+.bm-rev-filters-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.bm-rev-filters-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--bm-ink);
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.bm-rev-filters-btn:hover {
+    border-color: var(--bm-accent);
+}
+
+.bm-rev-filters-count {
+    background: var(--bm-navy);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 6px;
+    line-height: 1.4;
+}
+
+/* Position + box only — open/close is Component.setVisible(), which toggles the "hidden"
+   attribute. Without the [hidden] rule below, this class's own "display: flex" (author-origin,
+   same specificity as the browser's UA-stylesheet "[hidden] { display: none }") would win the
+   cascade tie and keep the panel visible even while hidden — the [hidden] variant must outrank
+   the plain class, which attaching the attribute selector to it does automatically. */
+.bm-rev-filters-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    width: 360px;
+    max-width: 80vw;
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bm-rev-filters-panel[hidden] {
+    display: none;
+}
+
+.bm-rev-filters-panel-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bm-rev-filters-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.bm-rev-chip-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.bm-rev-chip-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bm-faint-ink);
+    margin-right: 2px;
+}
+
+.bm-rev-chip {
+    font-size: 12.5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--bm-border);
+    background: #ffffff;
+    color: var(--bm-muted-ink);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.bm-rev-chip:hover {
+    border-color: var(--bm-accent);
+}
+
+.bm-rev-chip--active {
+    background: var(--bm-navy);
+    border-color: var(--bm-navy);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.bm-rev-sort {
+    flex-shrink: 0;
+    min-width: 190px;
+}
+
+.bm-rev-legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--bm-muted-ink);
+    padding: 0 4px;
+}
+
+.bm-rev-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bm-rev-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.bm-rev-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bm-rev-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid var(--bm-border);
+    border-left: 4px solid var(--bm-rev-ontrack);
+    border-radius: 10px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--bm-card-shadow);
+    transition: box-shadow 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.bm-rev-row:hover {
+    cursor: pointer;
+    box-shadow: var(--bm-card-shadow-hover);
+    /* removed: background: var(--bm-field-bg); */
+    /* removed: border-color: #c9cdd4; */
+}
+
+.bm-rev-row--overdue {
+    border-left-color: var(--bm-rev-overdue);
+}
+
+.bm-rev-row--duesoon {
+    border-left-color: var(--bm-rev-duesoon);
+}
+
+.bm-rev-row--exhausted {
+    background: #fbf9f4;
+    border-color: #ede4cc;
+    border-left-color: var(--bm-rev-exhausted);
+}
+
+/* Fix 2026-10-07 (pagination "something changed" signal): applied for one frame before the row is
+   attached, then swapped for -enter-active a tick later (ReviewQueueView.animateRowsIn()) — the two-
+   class handoff a CSS transition needs to actually run instead of snapping straight to the end state.
+   Only ever added when paging; filter/search/sort renders never get this class, so their rows render
+   plainly as before. */
+.bm-rev-row-enter {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.bm-rev-row-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 320ms ease, transform 320ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bm-rev-row-enter-active {
+        transition: none;
+    }
+}
+
+.bm-rev-row--exhausted:hover {
+    background: #f6f1e6;
+    /* Not a link (see ReviewQueueView.buildRow()'s comment) — only its two actions are
+         clickable, so the whole-card pointer cursor .bm-rev-row:hover sets would be misleading.
+         Same reasoning extends to the shadow: no hover lift here, since the row itself isn't the
+         click target — stays at the base shadow. */
+    cursor: default;
+    box-shadow: var(--bm-card-shadow);
+}
+
+.bm-rev-urgency {
+    min-width: 150px;
+    flex-shrink: 0;
+}
+
+.bm-rev-urgency-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    color: var(--bm-rev-ontrack);
+}
+
+.bm-rev-urgency-label--overdue {
+    color: var(--bm-rev-overdue);
+}
+
+.bm-rev-urgency-label--duesoon {
+    color: var(--bm-rev-duesoon);
+}
+
+.bm-rev-urgency-label--exhausted {
+    color: var(--bm-muted-ink);
+}
+
+.bm-rev-id {
+    display: block;
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.bm-rev-info {
+    flex: 1 1 260px;
+    min-width: 220px;
+}
+
+.bm-rev-title {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.bm-rev-sub {
+    display: block;
+    font-size: 12.5px;
+    color: var(--bm-muted-ink);
+    margin-top: 2px;
+}
+
+.bm-rev-positions {
+    min-width: 120px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.bm-rev-positions-main {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.bm-rev-positions-sub {
+    display: block;
+    font-size: 12px;
+    color: var(--bm-muted-ink);
+}
+
+.bm-rev-positions-sub--warn {
+    color: var(--bm-rev-duesoon);
+}
+
+.bm-rev-pills {
+    min-width: 170px;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.bm-rev-pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.bm-rev-pill-strong {
+    background: #e8f3ec;
+    color: #1e7a3c;
+}
+
+.bm-rev-pill-good {
+    background: #fef3dc;
+    color: #9a6b12;
+}
+
+.bm-rev-pill-zero {
+    background: #f1f2f4;
+    color: #8a919c;
+}
+
+.bm-rev-cta {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bm-rev-cta);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.bm-rev-cta--muted {
+    color: var(--bm-muted-ink);
+}
+
+/* EXHAUSTED rows' two distinct actions ("View" + "Flag for hiring") — see ReviewQueueView.
+   buildExhaustedActions()'s comment for why this isn't the same whole-row-link pattern the other
+   rows use. */
+.bm-rev-exhausted-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.bm-rev-flag-btn {
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--bm-rev-cta);
+    color: var(--bm-rev-cta);
+    background: #ffffff;
+}
+
+.bm-rev-flag-btn:hover:not(:disabled) {
+    background: var(--bm-rev-cta);
+    color: #ffffff;
+}
+
+.bm-rev-flag-btn--done,
+.bm-rev-flag-btn--done:hover {
+    border-color: #d7dbe0;
+    color: var(--bm-muted-ink);
+    background: #f1f2f4;
+    cursor: default;
+}
+
+.bm-rev-note {
+    font-size: 12.5px;
+    color: #8a919c;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bm-rev-note-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bm-rev-exhausted);
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.bm-rev-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 4px;
+}
+
+.bm-rev-pagination-caption {
+    font-size: 12.5px;
+    color: #8a919c;
+}
+
+.bm-rev-pagination-pages {
+    display: flex;
+    gap: 6px;
+}
+
+.bm-rev-page-btn {
+    font-size: 13px;
+    padding: 6px 11px;
+    border-radius: 7px;
+    border: 1px solid #d7dbe0;
+    color: var(--bm-muted-ink);
+    background: #ffffff;
+    cursor: pointer;
+    min-width: 34px;
+}
+
+/* 2026-10-08 fix: this rule's specificity (one class + two pseudo-classes) outranked
+   .bm-rev-page-btn--active's (one class), so hovering the CURRENT page's own button overrode its
+   dark background back to a light one while leaving --active's white text untouched — white text
+   on a light hover background, i.e. invisible. :not(.bm-rev-page-btn--active) excludes the active
+   button from this rule entirely; its own :hover rule right below keeps it dark+readable instead. */
+.bm-rev-page-btn:hover:not(:disabled):not(.bm-rev-page-btn--active) {
+    background: var(--bm-field-bg);
+}
+
+.bm-rev-page-btn:disabled {
+    color: #c9cdd4;
+    cursor: default;
+}
+
+.bm-rev-page-btn--active {
+    background: var(--bm-rev-cta);
+    color: #ffffff;
+    font-weight: 600;
+    border-color: var(--bm-rev-cta);
+}
+
+.bm-rev-page-btn--active:hover {
+    background: var(--bm-rev-cta-hover);
+}
+
+/* ---- Demand Workspace candidate cards — "two states, four dimensions" rebuild, 2026-10-06.
+   Replaces the flat .bm-queue-row candidate rows (kept for the Review QUEUE's own rows, which
+   this does not touch) with per-candidate cards carrying four dimension rows each. ---- */
+
+.bm-cand-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bm-cand-card {
+    border: 1px solid var(--bm-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--bm-card-shadow);
+    transition: box-shadow 0.15s ease;
+}
+
+.bm-cand-card:hover {
+    box-shadow: var(--bm-card-shadow-hover);
+}
+
+.bm-cand-card-override {
+    /* 2026-10-07: background tint removed on purpose — it used the same --bm-amber-bg as the "Good"
+       tier badge, so a full-card tint here would've made Override cards read as visually identical
+       to a Good match at a glance, even though they mean very different things (Good = an ordinary
+       engine-ranked tier; Override = outside the engine's band rule, needs a deliberate reviewer
+       call). The thin border-color outline is kept as the section's only card-level signal, on top
+       of the already-distinct "ONE BAND BELOW" badge and the dashed border around the whole section
+       (.bm-override-section, below). */
+    border-color: var(--bm-rev-duesoon);
+}
+
+.bm-cand-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bm-cand-tier-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.bm-cand-tier-strong {
+    background: #e6f4ea;
+    color: var(--bm-rev-ontrack);
+}
+
+.bm-cand-tier-good {
+    background: var(--bm-amber-bg);
+    color: var(--bm-amber-ink-strong);
+}
+
+.bm-cand-tier-weak {
+    background: var(--bm-border-faint);
+    color: var(--bm-muted-ink);
+}
+
+.bm-cand-tier-override {
+    background: var(--bm-rev-duesoon);
+    color: #ffffff;
+}
+
+.bm-cand-dims {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 42px;
+}
+
+.bm-cand-dim-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.bm-cand-dim-label {
+    display: block;
+    font-weight: 700;
+    color: var(--bm-muted-ink);
+    min-width: 72px;
+}
+
+.bm-cand-dim-collapsed {
+    display: block;
+    color: var(--bm-ink);
+}
+
+.bm-cand-dim-expanded {
+    display: block;
+    color: var(--bm-faint-ink);
+    font-style: italic;
+}
+
+.bm-override-section {
+    border: 1px dashed var(--bm-rev-duesoon);
+}
+
+/* 2026-10-07 "group fence" decision — mocked up against badge-only, full-card border, header-only
+   border and group-heading-only before landing here. A per-card border either repeated the badge's
+   own signal (header-only, scanned as redundant at a glance) or got visually loud once cards ran to
+   their real 6-7 line height (full-card). Group-heading-only was the opposite problem: the color
+   disappeared the moment you scrolled a card or two past the heading. This wraps the WHOLE section
+   (heading + every card) in one thin border instead, so the signal stays visible for as long as
+   you're inside that tier, same as the existing .bm-override-section above — this just extends
+   that section's own idea to Strong/Good/Weak too. Solid, not dashed: dashed already means
+   "Override, reviewer discretion" via .bm-override-section, and reusing it here would blur that. */
+.bm-cand-section-strong {
+    border-color: var(--bm-rev-ontrack);
+}
+
+.bm-cand-section-good {
+    border-color: var(--bm-amber-ink-strong);
+}
+
+.bm-cand-section-weak {
+    border-color: var(--bm-muted-ink);
+}
+
+.bm-override-btn {
+    /* 2026-10-07: without !important this loses to Aura's own native button theming — the
+       "Override" button only carries ButtonVariant.SMALL (no PRIMARY/CONTAINED/TERTIARY), so
+       Aura's default variant CSS still sets its own background/color on the same <vaadin-button>
+       host at an equal-or-higher effective specificity, and (being the component's own stylesheet)
+       wins the cascade tie. Net effect without this: the default pale background stays, our white
+       text color still applies, and white-on-pale is unreadable — exactly the bug reported. Forcing
+       both declarations is the standard workaround for styling past a Vaadin/Lumo-family component's
+       built-in theme rules. */
+    background: var(--bm-rev-duesoon) !important;
+    color: #ffffff !important;
+}
