@@ -223,6 +223,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 
@@ -314,6 +315,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 
@@ -392,6 +394,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 

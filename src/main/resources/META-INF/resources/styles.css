@@ -525,6 +525,19 @@ vaadin-grid.bm-grid {
     margin-bottom: 4px;
 }
 
+/* 2026-10-08 fix: "the layout is gone, Active Only is broken" — a HorizontalLayout defaults to
+   flex-wrap: nowrap, and none of its children (4 text fields, a checkbox, 2 buttons) had
+   flex-shrink: 0. When the row ran out of width, flexbox shrank every item to fit instead of
+   wrapping to a new line — the text fields and the Search/Clear buttons couldn't shrink below their
+   own text's width, so ALL of the squeeze landed on the one item whose label COULD still break
+   (the checkbox's), collapsing it down to a sliver and wrapping "Active only" one letter per line.
+   flex-wrap: wrap here means the row wraps onto a second line instead, the same treatment
+   .bm-rev-toolbar-row (Review page's near-identical search+checkbox+controls row) already uses. */
+.bm-sd-filter-bar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+}
+
 /* 2026-10-08 fix: "always a vertical scrollbar on the Supply & Demand page, on top of the grid's
    own scrollbar". SupplyDemandView's active pane (supplyPane/aafdPane/demandPane) is a flex item
    (flex-grow: 1) inside the view's own column layout, containing a Grid.setSizeFull() — but flex
