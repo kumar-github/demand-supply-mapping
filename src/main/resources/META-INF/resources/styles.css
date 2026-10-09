@@ -72,6 +72,15 @@
     --bm-sage-ink-strong: #3c4f44;
     --bm-quality-good: #c89a42;
 
+    /* Added 2026-10-09 for the Supply/AAFD/Demand grid Status and Classification badges — a light-bg
+         counterpart for each ink tone already above, same bg+ink pairing --bm-amber-*/
+
+    --bm-red-* already
+    use. --bm-green-ink reuses --bm-rev-ontrack
+
+'s exact value rather than a third "green" literal — one token, two names, since both mean the same "good/active" state . * / --bm-green-bg: #eaf6ec; --bm-green-ink: #2e7d32;
+    --bm-sage-bg: #eef3ef;
+
     /* Card elevation, added 2026-10-06 — see file header comment. Two-layer shadow (tight
          contact shadow + barely-there ambient one), kept intentionally faint at rest so it reads
          as "lifted surface" rather than a dramatic drop shadow; the hover variant roughly doubles
@@ -519,6 +528,100 @@ vaadin-grid.bm-grid {
        braces with .bm-sd-pane's fix: between the two, nothing in this chain can out-grow .bm-outlet
        any more. */
     min-height: 0;
+
+    /* 2026-10-09 "the AFD/AAFD/Demand grids look very basic" fix, card-framing half: border + radius +
+       shadow directly on the host element (a normal box-model border/shadow, not shadow-DOM styling, so
+       no ::part() needed here) plus overflow: hidden so the header's square corners get clipped to match
+       the rounded card — same border/shadow look .bm-kpi-tile and .bm-rev-toolbar-row already use
+       elsewhere in the app, just applied to the grid itself instead of a wrapping Div. */
+    border: 1px solid var(--bm-border);
+    border-radius: 10px;
+    box-shadow: var(--bm-card-shadow);
+    overflow: hidden;
+    background: #ffffff;
+}
+
+/* 2026-10-09, card-framing half 2: header tint + the "compact" row density picked from the mock.
+   Deliberately NOT touching --aura-base-size above — that 18 was a direct answer to the 2026-10-07
+   "too narrow/thin" complaint, and this compact pass is about row padding, not reopening that. Header/
+   body cell padding is overridden directly via ::part() instead, independent of the base-size token,
+   tightened below where --aura-base-size: 18 would otherwise land it. */
+vaadin-grid.bm-grid::part(header-cell) {
+    background: #f7f8fa;
+    font-weight: 600;
+    color: var(--bm-navy);
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+vaadin-grid.bm-grid::part(body-cell) {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+vaadin-grid.bm-grid::part(body-row):hover,
+vaadin-grid.bm-grid::part(body-cell):hover {
+    background: rgba(21, 33, 59, 0.06);
+}
+
+/* ---- Status/Classification/Band chips (Supply/AAFD/Demand grids) ----
+   2026-10-09: same base+modifier pattern as .bm-flag-chip/.bm-flag-chip-amber above, reusing the same
+   color tokens those already use (amber/red) for the same semantic meaning (caution/problem) rather than
+   inventing new ones, plus two new tokens (--bm-green-*, --bm-sage-bg) for the two states that had no
+   existing light-bg pairing yet. */
+.bm-grid-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.bm-grid-chip-active {
+    background: var(--bm-green-bg);
+    color: var(--bm-green-ink);
+}
+
+.bm-grid-chip-inactive {
+    background: var(--bm-field-bg);
+    color: var(--bm-faint-ink);
+}
+
+.bm-grid-chip-classified {
+    background: var(--bm-sage-bg);
+    color: var(--bm-sage-ink-strong);
+}
+
+.bm-grid-chip-unclassified {
+    background: var(--bm-field-bg);
+    color: var(--bm-muted-ink);
+}
+
+.bm-grid-chip-data-issue {
+    background: var(--bm-red-bg);
+    color: var(--bm-red-ink);
+}
+
+.bm-grid-chip-out-of-scope {
+    background: var(--bm-amber-bg);
+    color: var(--bm-amber-ink-strong);
+}
+
+.bm-band-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--bm-border);
+    color: var(--bm-ink);
+    background: #ffffff;
+    white-space: nowrap;
+    line-height: 1.4;
 }
 
 .bm-sd-tabs {

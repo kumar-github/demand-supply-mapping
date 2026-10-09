@@ -5,6 +5,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridLazyDataView;
@@ -230,14 +231,14 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
     private Grid<SupplyDto> buildSupplyGrid() {
         // See the old SupplyView.buildGrid's Javadoc for the flexGrow(0)-vs-(1) reasoning — unchanged.
         supplyGrid.addClassName("bm-grid");
-        supplyGrid.addColumn(SupplyDto::employeeId).setHeader("Employee ID").setSortable(true).setSortProperty("employeeId").setAutoWidth(true).setFlexGrow(0);
+        supplyGrid.addColumn(SupplyDto::employeeId).setHeader("Employee ID").setSortable(true).setSortProperty("employeeId").setAutoWidth(true).setFlexGrow(0).setTextAlign(ColumnTextAlign.END);
         supplyGrid.addColumn(SupplyDto::employeeName).setHeader("Name").setSortable(true).setSortProperty("employeeName").setAutoWidth(true).setFlexGrow(1);
-        supplyGrid.addColumn(SupplyDto::band).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
+        supplyGrid.addComponentColumn(dto -> bandChip(dto.band())).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
         supplyGrid.addColumn(SupplyDto::subBand).setHeader("Sub Band").setSortable(true).setSortProperty("subBand").setAutoWidth(true).setFlexGrow(0);
         supplyGrid.addColumn(SupplyDto::location).setHeader("Location").setSortable(true).setSortProperty("location").setAutoWidth(true).setFlexGrow(1);
         supplyGrid.addColumn(SupplyDto::persona).setHeader("Persona").setSortable(true).setSortProperty("persona.name").setAutoWidth(true).setFlexGrow(1);
         supplyGrid.addColumn(SupplyDto::subPersona).setHeader("Sub-persona").setSortable(true).setSortProperty("subPersona.name").setAutoWidth(true).setFlexGrow(1);
-        supplyGrid.addColumn(SupplyDto::classificationStatus).setHeader("Classification").setSortable(true).setSortProperty("classificationStatus").setAutoWidth(true).setFlexGrow(1);
+        supplyGrid.addComponentColumn(dto -> classificationChip(dto.classificationStatus())).setHeader("Classification").setSortable(true).setSortProperty("classificationStatus").setAutoWidth(true).setFlexGrow(1);
         // 2026-10-07: was a bare "⚠ Sub-capability mismatch" text column — now an always-visible
         // colored chip (so the flag doesn't need a hover to be noticed just to see THAT a row is
         // flagged). 2026-10-08: the chip's click-to-open-a-Dialog detail view (SupplyDto.
@@ -246,8 +247,8 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         // reasoning (a Dialog + Close button was more interaction than a one-line note warranted,
         // and it left the cell in an odd "focused" state after closing it).
         supplyGrid.addComponentColumn(this::buildSupplyFlagChip).setHeader("Flag").setAutoWidth(true).setFlexGrow(0);
-        supplyGrid.addColumn(SupplyDto::benchAgeingDays).setHeader("Bench Ageing (days)").setSortable(true).setSortProperty("benchAgeingDays").setAutoWidth(true).setFlexGrow(0);
-        supplyGrid.addColumn(dto -> dto.isActive() ? "Active" : "Inactive").setHeader("Status").setAutoWidth(true).setFlexGrow(0);
+        supplyGrid.addColumn(SupplyDto::benchAgeingDays).setHeader("Bench Ageing (days)").setSortable(true).setSortProperty("benchAgeingDays").setAutoWidth(true).setFlexGrow(0).setTextAlign(ColumnTextAlign.END);
+        supplyGrid.addComponentColumn(dto -> statusChip(dto.isActive())).setHeader("Status").setAutoWidth(true).setFlexGrow(0);
         supplyGrid.addThemeVariants(GridVariant.ROW_STRIPES);
         supplyGrid.setSizeFull();
         supplyGrid.setPageSize(50);
@@ -321,9 +322,9 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
 
     private Grid<AafdSupplyDto> buildAafdGrid() {
         aafdGrid.addClassName("bm-grid");
-        aafdGrid.addColumn(AafdSupplyDto::empCode).setHeader("Emp Code").setSortable(true).setSortProperty("empCode").setAutoWidth(true).setFlexGrow(0);
+        aafdGrid.addColumn(AafdSupplyDto::empCode).setHeader("Emp Code").setSortable(true).setSortProperty("empCode").setAutoWidth(true).setFlexGrow(0).setTextAlign(ColumnTextAlign.END);
         aafdGrid.addColumn(AafdSupplyDto::name).setHeader("Name").setSortable(true).setSortProperty("name").setAutoWidth(true).setFlexGrow(1);
-        aafdGrid.addColumn(AafdSupplyDto::band).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
+        aafdGrid.addComponentColumn(dto -> bandChip(dto.band())).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
         aafdGrid.addColumn(AafdSupplyDto::subBand).setHeader("Sub Band").setSortable(true).setSortProperty("subBand").setAutoWidth(true).setFlexGrow(0);
         aafdGrid.addColumn(AafdSupplyDto::location).setHeader("Location").setSortable(true).setSortProperty("location").setAutoWidth(true).setFlexGrow(1);
         aafdGrid.addColumn(AafdSupplyDto::capability).setHeader("Capability").setSortable(true).setSortProperty("capability").setAutoWidth(true).setFlexGrow(1);
@@ -332,7 +333,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         aafdGrid.addColumn(AafdSupplyDto::availabilityDate).setHeader("Availability Date").setAutoWidth(true).setFlexGrow(0);
         aafdGrid.addColumn(AafdSupplyDto::customer).setHeader("Customer").setAutoWidth(true).setFlexGrow(1);
         aafdGrid.addColumn(AafdSupplyDto::deploymentStatus).setHeader("Deployment Status").setAutoWidth(true).setFlexGrow(0);
-        aafdGrid.addColumn(dto -> dto.isActive() ? "Active" : "Inactive").setHeader("Status").setAutoWidth(true).setFlexGrow(0);
+        aafdGrid.addComponentColumn(dto -> statusChip(dto.isActive())).setHeader("Status").setAutoWidth(true).setFlexGrow(0);
         aafdGrid.addThemeVariants(GridVariant.ROW_STRIPES);
         aafdGrid.setSizeFull();
         aafdGrid.setPageSize(50);
@@ -400,18 +401,18 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
 
     private Grid<DemandDto> buildDemandGrid() {
         demandGrid.addClassName("bm-grid");
-        demandGrid.addColumn(DemandDto::demandId).setHeader("Demand ID").setSortable(true).setSortProperty("demandId").setAutoWidth(true).setFlexGrow(0);
+        demandGrid.addColumn(DemandDto::demandId).setHeader("Demand ID").setSortable(true).setSortProperty("demandId").setAutoWidth(true).setFlexGrow(0).setTextAlign(ColumnTextAlign.END);
         demandGrid.addColumn(DemandDto::clusterNameRaw).setHeader("Cluster").setSortable(true).setSortProperty("clusterNameRaw").setAutoWidth(true).setFlexGrow(1);
         demandGrid.addColumn(DemandDto::location).setHeader("Location").setSortable(true).setSortProperty("location").setAutoWidth(true).setFlexGrow(1);
-        demandGrid.addColumn(DemandDto::band).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
+        demandGrid.addComponentColumn(dto -> bandChip(dto.band())).setHeader("Band").setSortable(true).setSortProperty("band").setAutoWidth(true).setFlexGrow(0);
         demandGrid.addColumn(DemandDto::persona).setHeader("Persona").setSortable(true).setSortProperty("persona.name").setAutoWidth(true).setFlexGrow(1);
         demandGrid.addColumn(DemandDto::subPersona).setHeader("Sub-persona").setSortable(true).setSortProperty("subPersona.name").setAutoWidth(true).setFlexGrow(1);
-        demandGrid.addColumn(DemandDto::classificationStatus).setHeader("Classification").setSortable(true).setSortProperty("classificationStatus").setAutoWidth(true).setFlexGrow(1);
+        demandGrid.addComponentColumn(dto -> classificationChip(dto.classificationStatus())).setHeader("Classification").setSortable(true).setSortProperty("classificationStatus").setAutoWidth(true).setFlexGrow(1);
         // See buildSupplyGrid's comment above the equivalent Supply column — same treatment, this
         // time backed by DemandDto.masMappingNote (MAS-mapping mismatch), shown in red rather than
         // amber to keep it visually distinct from Supply's sub-capability mismatch chip.
         demandGrid.addComponentColumn(this::buildDemandFlagChip).setHeader("Flag").setAutoWidth(true).setFlexGrow(0);
-        demandGrid.addColumn(dto -> dto.isActive() ? "Active" : "Inactive").setHeader("Status").setAutoWidth(true).setFlexGrow(0);
+        demandGrid.addComponentColumn(dto -> statusChip(dto.isActive())).setHeader("Status").setAutoWidth(true).setFlexGrow(0);
         demandGrid.addThemeVariants(GridVariant.ROW_STRIPES);
         demandGrid.setSizeFull();
         demandGrid.setPageSize(50);
@@ -447,6 +448,56 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
             return okChip();
         }
         return flagChip("red", "MAS mapping mismatch", dto.masMappingNote());
+    }
+
+    /**
+     * 2026-10-09 "the grids look very basic" fix — Status as a colored pill instead of plain "Active"/ "Inactive" text,
+     * shared by all three grids (Supply/AAFD/Demand all expose the same isActive() boolean on their DTOs, so one helper
+     * covers all three rather than three near-identical ones).
+     */
+    private Component statusChip(boolean active) {
+        Span chip = new Span(active ? "Active" : "Inactive");
+        chip.addClassNames("bm-grid-chip", active ? "bm-grid-chip-active" : "bm-grid-chip-inactive");
+        return chip;
+    }
+
+    /**
+     * Same chip treatment for Classification, shared by Supply and Demand (AAFD has no classification column — see
+     * AafdSupplyEnriched's Javadoc). The four values here are RefreshLogic.classifySupply()/ classifyDemand()'s actual
+     * classificationStatus literals, confirmed by reading that class rather than assumed — "out_of_scope" only ever
+     * occurs on the Demand side (the MAS Mapping scope gate has no Supply-side equivalent), so it renders fine here
+     * even though Supply's own data never produces it. Colors reuse this page's existing flag-chip tokens for the same
+     * meanings (amber = excluded/ caution, red = data problem) rather than inventing new ones, plus two new bg/ink
+     * pairs (--bm-green-*, --bm-sage-bg) for "Active" and "Classified" — see styles.css for the token definitions.
+     */
+    private Component classificationChip(String classificationStatus) {
+        String status = classificationStatus == null ? "" : classificationStatus;
+        String label = switch (status) {
+            case "classified" -> "Classified";
+            case "unclassified" -> "Unclassified";
+            case "data_issue" -> "Data issue";
+            case "out_of_scope" -> "Out of scope";
+            default -> status.isEmpty() ? "—" : status;
+        };
+        String modifier = switch (status) {
+            case "classified" -> "classified";
+            case "data_issue" -> "data-issue";
+            case "out_of_scope" -> "out-of-scope";
+            default -> "unclassified";
+        };
+        Span chip = new Span(label);
+        chip.addClassNames("bm-grid-chip", "bm-grid-chip-" + modifier);
+        return chip;
+    }
+
+    /**
+     * Band as a neutral outlined pill (not a colored one — Band isn't a status, just a value worth visually separating
+     * from plain text), shared by all three grids the same way statusChip() is.
+     */
+    private Component bandChip(String band) {
+        Span chip = new Span(band == null ? "—" : band);
+        chip.addClassName("bm-band-chip");
+        return chip;
     }
 
     private Span okChip() {

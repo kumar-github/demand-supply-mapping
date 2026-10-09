@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -63,7 +64,7 @@ public class UploadView extends VerticalLayout {
         setPadding(true);
         setSpacing(true);
 
-        add(buildUploadSection("Supply", "Upload the AFD-Supply.xlsx export to refresh supply_enriched.", "supply"));
+        add(buildUploadSection("AFD Supply", "Upload the AFD-Supply.xlsx export to refresh supply_enriched.", "supply"));
         add(buildUploadSection("AAFD Supply", "Upload the AAFD-Supply.xlsx export to refresh aafd_supply_enriched (a separate table from Supply — see the AAFD Supply tab).", "aafd"));
         add(buildUploadSection("Demand", "Upload the Demand.xlsx export to refresh demand_enriched.", "demand"));
         add(buildMatchingSection());
@@ -142,12 +143,16 @@ public class UploadView extends VerticalLayout {
 
     private void showResult(Div result, RefreshRun run) {
         result.removeAll();
+        // Span, not Text: Text renders as a bare DOM text node, and HorizontalLayout's setSpacing(true) works via
+        // flexbox gap — gap only inserts space between element children, not between text nodes, so with Text here
+        // every field ran together with no space at all ("Status: succeededRows in: 1461New: 262..."). Span is a
+        // real element, so the same gap now actually separates them.
         HorizontalLayout counts = new HorizontalLayout(
-                new Text("Status: " + run.getStatus()),
-                new Text("Rows in: " + run.getRowsIn()),
-                new Text("New: " + run.getRowsNew()),
-                new Text("Changed: " + run.getRowsChanged()),
-                new Text("Flagged: " + run.getRowsFlagged())
+                new Span("Status: " + run.getStatus()),
+                new Span("Rows in: " + run.getRowsIn()),
+                new Span("New: " + run.getRowsNew()),
+                new Span("Changed: " + run.getRowsChanged()),
+                new Span("Flagged: " + run.getRowsFlagged())
         );
         counts.setSpacing(true);
         result.add(counts);
@@ -158,11 +163,12 @@ public class UploadView extends VerticalLayout {
 
     private void showMatchingResult(Div result, RefreshRun run) {
         result.removeAll();
+        // Same Text -> Span fix as showResult() above, same reason.
         HorizontalLayout counts = new HorizontalLayout(
-                new Text("Status: " + run.getStatus()),
-                new Text("Supply considered: " + run.getRowsIn()),
-                new Text("Match rows written: " + run.getRowsNew()),
-                new Text("Excluded near-misses: " + run.getRowsFlagged())
+                new Span("Status: " + run.getStatus()),
+                new Span("Supply considered: " + run.getRowsIn()),
+                new Span("Match rows written: " + run.getRowsNew()),
+                new Span("Excluded near-misses: " + run.getRowsFlagged())
         );
         counts.setSpacing(true);
         result.add(counts);
