@@ -1,7 +1,7 @@
 version: "1"
 services:
   - type: web
-    name: demand-supply-mapping-service
+    name: demand-supply-mapping
     runtime: docker
     dockerfilePath: ./Dockerfile
     repo: https://github.com/kumar-github/demand-supply-mapping
