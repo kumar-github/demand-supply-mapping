@@ -940,9 +940,15 @@ vaadin-text-field.bm-rev-search::part(input-field) {
     font-weight: 600;
 }
 
+/* 2026-10-09 fix: "the text is not visible if the length of the text exceeds certain number of
+   characters" — the longest option ("Most open positions first") was getting clipped/ellipsized
+   because min-width here (190px) was narrower than the Aura theme's own default select width, so
+   it had no effect (min-width only wins when it's the LARGER of the two) and the select rendered at
+   its unstyled default width, too narrow for that option's text. Widened past the longest option's
+   actual rendered width so min-width now is the larger value and actually constrains it. */
 .bm-rev-sort {
     flex-shrink: 0;
-    min-width: 190px;
+    min-width: 260px;
 }
 
 .bm-rev-legend {

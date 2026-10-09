@@ -9,19 +9,17 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.streams.UploadHandler;
 import dev.badprogrammer.demandsupplymapping.entity.RefreshRun;
 import dev.badprogrammer.demandsupplymapping.matching.MatchingRunService;
 import dev.badprogrammer.demandsupplymapping.refresh.AafdRefreshService;
 import dev.badprogrammer.demandsupplymapping.refresh.RefreshService;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 
 /**
  * Runs a supply, AAFD, or demand refresh from an uploaded Excel file, and a matching run on demand. Calls
@@ -29,9 +27,13 @@ import java.nio.file.StandardCopyOption;
  * RefreshController (see that class's Javadoc for why: this is a Vaadin view, so per this app's own architecture it
  * goes straight to the service layer rather than round-tripping through HTTP to itself).
  * <p>
- * Each Upload widget accepts one .xlsx file, buffers it in memory (small files — the real exports are a few hundred
- * rows), stages it to a temp file (the refresh services need a real Path, not a stream), runs the matching refresh,
- * shows the resulting row counts, and cleans the temp file up.
+ * Each Upload widget accepts one .xlsx file. {@code UploadHandler.toTempFile(...)} (the non-deprecated replacement for
+ * the old {@code MemoryBuffer}-backed {@code Upload}, swapped 2026-10-09) stages the upload straight to a temp file
+ * itself — the refresh services need a real {@code Path}, not a stream — and hands the callback that finished
+ * {@code File} directly; the callback still deletes it once the refresh runs, since per {@code UploadHandler}'s own
+ * Javadoc temp files are NOT cleaned up automatically. The callback runs on the UI thread (same as the old
+ * {@code addSucceededListener}), so updating {@code result}/firing a {@code Notification} from inside it needs no extra
+ * {@code UI.access(...)} wrapping.
  * <p>
  * The AAFD section (added 2026-10-08, per explicit instruction) uploads into its own aafd_supply_enriched table — see
  * AafdRefreshService's Javadoc for why that's a separate table from supply_enriched, not a column on it.
@@ -68,23 +70,14 @@ public class UploadView extends VerticalLayout {
     }
 
     private VerticalLayout buildUploadSection(String title, String helpText, String kind) {
-        MemoryBuffer buffer = new MemoryBuffer();
-        Upload upload = new Upload(buffer);
-        upload.setAcceptedFileTypes(".xlsx");
-        upload.setMaxFiles(1);
-        upload.setDropAllowed(true);
-
         Div result = new Div();
 
-        upload.addSucceededListener(event -> {
-            String fileName = event.getFileName();
-            Path staged = null;
+        UploadHandler uploadHandler = UploadHandler.toTempFile((metadata, file) -> {
             try {
-                staged = stage(buffer.getInputStream(), fileName);
                 RefreshRun run = switch (kind) {
-                    case "supply" -> refreshService.refreshSupply(staged);
-                    case "demand" -> refreshService.refreshDemand(staged);
-                    default -> aafdRefreshService.refreshAafd(staged);
+                    case "supply" -> refreshService.refreshSupply(file.toPath());
+                    case "demand" -> refreshService.refreshDemand(file.toPath());
+                    default -> aafdRefreshService.refreshAafd(file.toPath());
                 };
                 showResult(result, run);
                 Notification success = Notification.show(title + " refresh finished: " + run.getStatus());
@@ -95,9 +88,14 @@ public class UploadView extends VerticalLayout {
                 Notification failure = Notification.show("Refresh failed — see details below.");
                 failure.addThemeVariants(NotificationVariant.ERROR);
             } finally {
-                deleteQuietly(staged);
+                deleteQuietly(file);
             }
         });
+
+        Upload upload = new Upload(uploadHandler);
+        upload.setAcceptedFileTypes(".xlsx");
+        upload.setMaxFiles(1);
+        upload.setDropAllowed(true);
 
         upload.addFileRejectedListener(event -> {
             Notification n = Notification.show(event.getErrorMessage());
@@ -173,23 +171,12 @@ public class UploadView extends VerticalLayout {
         }
     }
 
-    private Path stage(InputStream in, String originalFileName) throws IOException {
-        String suffix = (originalFileName != null && originalFileName.contains("."))
-                ? originalFileName.substring(originalFileName.lastIndexOf('.'))
-                : ".xlsx";
-        Path staged = Files.createTempFile("benchmatch-upload-", suffix);
-        try (in) {
-            Files.copy(in, staged, StandardCopyOption.REPLACE_EXISTING);
-        }
-        return staged;
-    }
-
-    private void deleteQuietly(Path path) {
-        if (path == null) {
+    private void deleteQuietly(File file) {
+        if (file == null) {
             return;
         }
         try {
-            Files.deleteIfExists(path);
+            Files.deleteIfExists(file.toPath());
         } catch (IOException ignored) {
             // Best-effort cleanup only.
         }
