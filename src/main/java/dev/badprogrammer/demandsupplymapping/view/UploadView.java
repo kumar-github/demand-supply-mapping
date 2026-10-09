@@ -28,13 +28,13 @@ import java.nio.file.Files;
  * RefreshController (see that class's Javadoc for why: this is a Vaadin view, so per this app's own architecture it
  * goes straight to the service layer rather than round-tripping through HTTP to itself).
  * <p>
- * Each Upload widget accepts one .xlsx file. {@code UploadHandler.toTempFile(...)} (the non-deprecated replacement for
- * the old {@code MemoryBuffer}-backed {@code Upload}, swapped 2026-10-09) stages the upload straight to a temp file
- * itself — the refresh services need a real {@code Path}, not a stream — and hands the callback that finished
+ * Each Upload widget accepts one .xlsx file. {@code UploadHandler.toTempFile(...)} (the non-deprecated replacement
+ * for the old {@code MemoryBuffer}-backed {@code Upload}, swapped 2026-10-09) stages the upload straight to a temp
+ * file itself — the refresh services need a real {@code Path}, not a stream — and hands the callback that finished
  * {@code File} directly; the callback still deletes it once the refresh runs, since per {@code UploadHandler}'s own
  * Javadoc temp files are NOT cleaned up automatically. The callback runs on the UI thread (same as the old
- * {@code addSucceededListener}), so updating {@code result}/firing a {@code Notification} from inside it needs no extra
- * {@code UI.access(...)} wrapping.
+ * {@code addSucceededListener}), so updating {@code result}/firing a {@code Notification} from inside it needs no
+ * extra {@code UI.access(...)} wrapping.
  * <p>
  * The AAFD section (added 2026-10-08, per explicit instruction) uploads into its own aafd_supply_enriched table — see
  * AafdRefreshService's Javadoc for why that's a separate table from supply_enriched, not a column on it.

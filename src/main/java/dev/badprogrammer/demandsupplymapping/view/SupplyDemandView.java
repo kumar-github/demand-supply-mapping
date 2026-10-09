@@ -224,7 +224,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
-        bar.addClassName("bm-sd-filter-bar");
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 
@@ -316,7 +316,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
-        bar.addClassName("bm-sd-filter-bar");
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 
@@ -395,7 +395,7 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
         );
         bar.setWidthFull();
         bar.setAlignItems(Alignment.BASELINE);
-        bar.addClassName("bm-sd-filter-bar");
+		bar.addClassName("bm-sd-filter-bar");
         return bar;
     }
 
@@ -451,9 +451,9 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
     }
 
     /**
-     * 2026-10-09 "the grids look very basic" fix — Status as a colored pill instead of plain "Active"/ "Inactive" text,
-     * shared by all three grids (Supply/AAFD/Demand all expose the same isActive() boolean on their DTOs, so one helper
-     * covers all three rather than three near-identical ones).
+     * 2026-10-09 "the grids look very basic" fix — Status as a colored pill instead of plain "Active"/
+     * "Inactive" text, shared by all three grids (Supply/AAFD/Demand all expose the same isActive()
+     * boolean on their DTOs, so one helper covers all three rather than three near-identical ones).
      */
     private Component statusChip(boolean active) {
         Span chip = new Span(active ? "Active" : "Inactive");
@@ -462,13 +462,14 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
     }
 
     /**
-     * Same chip treatment for Classification, shared by Supply and Demand (AAFD has no classification column — see
-     * AafdSupplyEnriched's Javadoc). The four values here are RefreshLogic.classifySupply()/ classifyDemand()'s actual
-     * classificationStatus literals, confirmed by reading that class rather than assumed — "out_of_scope" only ever
-     * occurs on the Demand side (the MAS Mapping scope gate has no Supply-side equivalent), so it renders fine here
-     * even though Supply's own data never produces it. Colors reuse this page's existing flag-chip tokens for the same
-     * meanings (amber = excluded/ caution, red = data problem) rather than inventing new ones, plus two new bg/ink
-     * pairs (--bm-green-*, --bm-sage-bg) for "Active" and "Classified" — see styles.css for the token definitions.
+     * Same chip treatment for Classification, shared by Supply and Demand (AAFD has no classification
+     * column — see AafdSupplyEnriched's Javadoc). The four values here are RefreshLogic.classifySupply()/
+     * classifyDemand()'s actual classificationStatus literals, confirmed by reading that class rather
+     * than assumed — "out_of_scope" only ever occurs on the Demand side (the MAS Mapping scope gate has
+     * no Supply-side equivalent), so it renders fine here even though Supply's own data never produces
+     * it. Colors reuse this page's existing flag-chip tokens for the same meanings (amber = excluded/
+     * caution, red = data problem) rather than inventing new ones, plus two new bg/ink pairs (--bm-green-*,
+     * --bm-sage-bg) for "Active" and "Classified" — see styles.css for the token definitions.
      */
     private Component classificationChip(String classificationStatus) {
         String status = classificationStatus == null ? "" : classificationStatus;
@@ -491,8 +492,8 @@ public class SupplyDemandView extends VerticalLayout implements BeforeEnterObser
     }
 
     /**
-     * Band as a neutral outlined pill (not a colored one — Band isn't a status, just a value worth visually separating
-     * from plain text), shared by all three grids the same way statusChip() is.
+     * Band as a neutral outlined pill (not a colored one — Band isn't a status, just a value worth
+     * visually separating from plain text), shared by all three grids the same way statusChip() is.
      */
     private Component bandChip(String band) {
         Span chip = new Span(band == null ? "—" : band);

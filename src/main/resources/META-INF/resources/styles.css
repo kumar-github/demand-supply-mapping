@@ -73,12 +73,11 @@
     --bm-quality-good: #c89a42;
 
     /* Added 2026-10-09 for the Supply/AAFD/Demand grid Status and Classification badges — a light-bg
-         counterpart for each ink tone already above, same bg+ink pairing --bm-amber-*/
-
-    --bm-red-* already
-    use. --bm-green-ink reuses --bm-rev-ontrack
-
-'s exact value rather than a third "green" literal — one token, two names, since both mean the same "good/active" state . * / --bm-green-bg: #eaf6ec; --bm-green-ink: #2e7d32;
+         counterpart for each ink tone already above, same bg and ink pairing the amber and red tokens
+         already use. --bm-green-ink reuses --bm-rev-ontrack's exact value rather than a third "green" literal — one
+         token, two names, since both mean the same "good/active" state. */
+    --bm-green-bg: #eaf6ec;
+    --bm-green-ink: #2e7d32;
     --bm-sage-bg: #eef3ef;
 
     /* Card elevation, added 2026-10-06 — see file header comment. Two-layer shadow (tight

@@ -32,15 +32,16 @@ import java.time.LocalDate;
  * {@code StreamResource} here on 2026-10-09 — same lazy-on-click contract, see its own Javadoc). The by-demand
  * {@code DownloadHandler} is still rebuilt fresh on every click, exactly like the {@code StreamResource} it replaced
  * was — NOT optional busywork: {@code InputStreamDownloadCallback.complete(...)} runs with no
- * {@code UI.access()}/session-lock wrapping (confirmed from Vaadin's own {@code InputStreamDownloadHandler} source — a
- * download callback is meant to only produce bytes, same contract the old {@code StreamResource} supplier had), so
+ * {@code UI.access()}/session-lock wrapping (confirmed from Vaadin's own {@code InputStreamDownloadHandler} source —
+ * a download callback is meant to only produce bytes, same contract the old {@code StreamResource} supplier had), so
  * reading a live field's value from inside it would be touching Vaadin UI state off the UI thread without the lock.
  * {@code demandLimitField.getValue()} is read on the UI thread, in the Button's click listener (which does hold the
- * session lock), resolved into a plain {@code int}, and only that already-resolved value is captured into the handler —
- * the handler itself never touches the field. Neither Anchor sets the HTML {@code download} attribute explicitly any
- * more: {@code Anchor}'s {@code DownloadHandler} constructor/{@code setHref} default to {@code AttachmentType.DOWNLOAD}
- * for a non-inline handler (which {@code fromInputStream(...)} is), so the browser is told to save the file via the
- * response's {@code Content-Disposition} header instead, the same outcome the old attribute produced.
+ * session lock), resolved into a plain {@code int}, and only that already-resolved value is captured into the
+ * handler — the handler itself never touches the field. Neither Anchor sets the HTML {@code download} attribute
+ * explicitly any more: {@code Anchor}'s {@code DownloadHandler} constructor/{@code setHref} default to
+ * {@code AttachmentType.DOWNLOAD} for a non-inline handler (which {@code fromInputStream(...)} is), so the browser
+ * is told to save the file via the response's {@code Content-Disposition} header instead, the same outcome the old
+ * attribute produced.
  */
 @Route(value = "shortlist", layout = MainLayout.class)
 @PageTitle("Shortlist")
