@@ -1,0 +1,287 @@
+/* ==========================================================================================
+   Bad Programmer Frost applied to Bench Match.
+   Loaded AFTER styles.css (see DemandSupplyMappingApplication), so same-specificity rules here win
+   and styles.css itself stays untouched. Three parts:
+     1. the app's own --bm-* colour variables are re-pointed at Frost tokens, so every rule in styles.css
+        that already uses a variable follows the active theme (light, light-paper, light-aurora, dark,
+        dark-graphite, dark-aurora — set as data-theme on <html> by MainLayout's theme switcher);
+     2. the few literal colours in styles.css (white cards, cream rows, navy sidebar...) are overridden;
+     3. Frost card effects (frosted glass, radius, depth) and Inter-only typography.
+   Not applied on purpose: backdrop blur on repeated rows (Review queue renders hundreds), KPI icon tiles
+   and the illustration sprites (the app has no equivalent content).
+   ========================================================================================== */
+
+/* ---- 1. Variables ------------------------------------------------------------------- */
+:root {
+    --bm-ink: var(--ink);
+    --bm-muted-ink: var(--muted);
+    --bm-faint-ink: var(--muted);
+    --bm-border: var(--control-border);
+    --bm-border-faint: var(--line);
+    --bm-content-bg: transparent; /* the page ground (and Aurora glow) shows through */
+    --bm-field-bg: var(--surface-sunken);
+
+    --bm-navy: var(--ink); /* was the sidebar navy; now only used as text/ink */
+    --bm-navy-active: var(--surface-selected);
+    --bm-accent: var(--brand-500);
+    --bm-accent-text: var(--on-brand);
+    --bm-teal: var(--success-fill);
+    --bm-quality-good: var(--warning-fill);
+    --bm-sage-ink-strong: var(--link);
+    --bm-sage-bg: var(--brand-soft);
+
+    --bm-amber-bg: var(--warning-bg);
+    --bm-amber-ink: var(--warning-text);
+    --bm-amber-ink-strong: var(--warning-text);
+    --bm-green-bg: var(--success-bg);
+    --bm-green-ink: var(--success-text);
+    /* no danger tint/text tokens in Frost: derive them so they stay readable in light and dark */
+    --bm-red-bg: color-mix(in srgb, var(--danger) 14%, transparent);
+    --bm-red-ink: color-mix(in srgb, var(--danger) 72%, var(--ink));
+    --bm-red-strong: var(--danger);
+
+    --bm-rev-overdue: color-mix(in srgb, var(--danger) 72%, var(--ink));
+    --bm-rev-duesoon: var(--warning-text);
+    --bm-rev-ontrack: var(--success-text);
+    --bm-rev-exhausted: var(--muted);
+    --bm-rev-cta: var(--link);
+    --bm-rev-cta-hover: var(--brand-400);
+
+    --bm-card-shadow: var(--shadow-card);
+    --bm-card-shadow-hover: var(--shadow-card), 0 0 0 1px var(--brand-500);
+}
+
+/* ---- 2. Typography: Inter only (Frost) ---------------------------------------------- */
+.bm-shell,
+.bm-logo-badge, .bm-brand, .bm-header-title, .bm-avatar, .bm-kpi-value,
+.bm-card-title-lg, .bm-pbtn, .bm-queue-avatar {
+    font-family: var(--font-sans);
+}
+
+.bm-kpi-value {
+    font-weight: 700;
+    font-size: 1.75rem;
+    line-height: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.bm-kpi-label {
+    font-weight: 600;
+}
+
+/* ---- 3. Page ground ----------------------------------------------------------------- */
+.bm-shell, .bm-dash {
+    background: transparent;
+}
+
+/* ---- 4. Frosted surfaces: sidebar, header, cards, grids ----------------------------- */
+.bm-sidebar, .bm-header, .bm-card, .bm-kpi-tile, vaadin-grid.bm-grid {
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    box-shadow: var(--shadow-card);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+}
+
+.bm-card, .bm-kpi-tile, vaadin-grid.bm-grid, .bm-sidebar, .bm-header {
+    border-radius: var(--radius-lg);
+}
+
+.bm-kpi-tile-highlighted {
+    border: 1.5px solid var(--brand-500);
+}
+
+/* Sidebar becomes a floating glass panel instead of a permanently dark column */
+.bm-sidebar {
+    margin: var(--space-3) 0 var(--space-3) var(--space-3);
+}
+
+.bm-brand {
+    color: var(--ink);
+}
+
+.bm-navitem {
+    color: var(--ink-2);
+}
+
+.bm-navitem:hover {
+    background: var(--surface-hover);
+}
+
+.bm-navitem[highlight] {
+    background: var(--surface-selected);
+    color: var(--link);
+}
+
+.bm-navitem[highlight] .bm-navlabel {
+    color: var(--link);
+}
+
+.soon-badge {
+    color: var(--muted);
+    border-color: var(--control-border);
+}
+
+.bm-version {
+    color: var(--muted);
+}
+
+/* Header becomes a floating glass bar */
+.bm-header {
+    margin: var(--space-3) var(--space-3) 0 var(--space-3);
+    height: 4rem;
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid var(--card-edge);
+}
+
+.bm-header-right {
+    gap: var(--space-4);
+}
+
+/* Rows and field-like surfaces: solid Frost fills (no blur — there can be hundreds of rows) */
+.bm-rev-toolbar-row, .bm-rev-row, .bm-cand-card, .bm-queue-rows, .bm-rev-filters-panel {
+    background: var(--card);
+    border-color: var(--card-edge);
+    box-shadow: var(--shadow-card);
+}
+
+.bm-rev-row, .bm-cand-card, .bm-queue-rows {
+    border-radius: var(--radius-md);
+}
+
+.bm-rev-toolbar-row {
+    border-radius: var(--radius-lg);
+}
+
+.bm-rev-filters-panel {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-chip);
+}
+
+.bm-queue-rows {
+    background: transparent;
+    box-shadow: none;
+    border-color: var(--line);
+}
+
+/* no card inside a card */
+.bm-queue-row {
+    box-shadow: none;
+}
+
+.bm-queue-row:hover {
+    box-shadow: none;
+    background: var(--surface-hover);
+}
+
+.bm-rev-row--exhausted {
+    background: var(--surface-sunken);
+    border-color: var(--card-edge);
+}
+
+.bm-rev-row--exhausted:hover {
+    background: var(--surface-hover);
+}
+
+.bm-rev-filters-btn, .bm-rev-chip, .bm-rev-flag-btn, .bm-rev-page-btn, .bm-band-chip,
+vaadin-text-field.bm-rev-search::part(input-field) {
+    background: var(--control-bg);
+    border-color: var(--control-border);
+    color: var(--ink);
+}
+
+.bm-rev-flag-btn {
+    color: var(--link);
+    border-color: var(--link);
+}
+
+.bm-rev-flag-btn--done, .bm-rev-flag-btn--done:hover {
+    background: var(--surface-sunken);
+    border-color: var(--control-border);
+}
+
+.bm-rev-page-btn:disabled {
+    color: var(--muted);
+    opacity: 0.5;
+}
+
+.bm-rev-filters-btn:hover, .bm-rev-chip:hover {
+    border-color: var(--brand-500);
+}
+
+/* Filled controls: Frost blue, readable in every theme */
+.bm-rev-chip--active, .bm-rev-filters-count,
+.bm-rev-flag-btn:hover:not(:disabled), .bm-rev-page-btn--active, .bm-pbtn {
+    background: var(--brand-500);
+    border-color: var(--brand-500);
+    color: var(--on-brand);
+}
+
+.bm-rev-page-btn--active:hover {
+    background: var(--brand-400);
+    border-color: var(--brand-400);
+}
+
+.bm-cand-tier-override, .bm-override-btn {
+    background: var(--warning-fill) !important;
+    color: #1f1300 !important;
+}
+
+/* Grid: header, hover and cells follow the theme */
+vaadin-grid.bm-grid::part(header-cell) {
+    background: var(--surface-summary);
+    color: var(--ink-2);
+}
+
+vaadin-grid.bm-grid::part(body-cell) {
+    background: transparent;
+}
+
+vaadin-grid.bm-grid::part(body-row):hover,
+vaadin-grid.bm-grid::part(body-cell):hover {
+    background: var(--surface-hover);
+}
+
+/* Pills and chips with literal colours in styles.css */
+.bm-rev-pill-strong {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.bm-rev-pill-good {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.bm-rev-pill-zero {
+    background: var(--neutral-bg);
+    color: var(--neutral-text);
+}
+
+.bm-cand-tier-strong {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.bm-grid-chip-inactive, .bm-grid-chip-unclassified, .bm-flag-chip-ok {
+    background: var(--neutral-bg);
+    color: var(--neutral-text);
+}
+
+.bm-kpi-caption-teal {
+    color: var(--success-text);
+}
+
+/* Small text with literal greys */
+.bm-queue-reconciliation, .bm-rev-note, .bm-rev-pagination-caption {
+    color: var(--muted);
+}
+
+.bm-legend-item {
+    color: var(--ink-2);
+}
+
+/* Theme switcher in the header */
+.bm-theme-select {
+    width: 11rem;
+}

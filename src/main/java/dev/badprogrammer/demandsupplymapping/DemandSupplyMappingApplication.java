@@ -14,12 +14,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @StyleSheet(Aura.STYLESHEET)
-// Brand fonts for the dashboard shell (Plus Jakarta Sans for headings/numbers, Inter for body) —
-// swapped 2026-10-07 from Manrope/IBM Plex Sans for a cleaner, more polished look; same mechanism
-// as before — @StyleSheet supports an absolute https:// URL directly, per
-// https://vaadin.com/docs/latest/styling/stylesheets
-@StyleSheet("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600&display=swap")
+// Inter for everything (Bad Programmer Frost is Inter-only) — @StyleSheet supports an absolute https:// URL directly,
+// per https://vaadin.com/docs/latest/styling/stylesheets
+@StyleSheet("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap")
+// Bad Programmer Frost: design tokens for six themes (light, light-paper, light-aurora, dark, dark-graphite,
+// dark-aurora — selected with data-theme on <html>) plus the Aura mapping. Must come before styles.css.
+@StyleSheet("bp-frost.css")
 @StyleSheet("styles.css") // Your custom styles
+// Re-points styles.css's --bm-* variables at the Frost tokens and applies the Frost card effects. Must come last.
+@StyleSheet("frost-app.css")
 @Push
 public class DemandSupplyMappingApplication implements AppShellConfigurator {
 

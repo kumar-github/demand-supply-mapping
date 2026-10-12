@@ -3,9 +3,11 @@ package dev.badprogrammer.demandsupplymapping.view;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLayout;
 import com.vaadin.flow.router.RouterLink;
@@ -15,6 +17,8 @@ import dev.badprogrammer.demandsupplymapping.repository.RefreshRunRepository;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -199,12 +203,52 @@ public class MainLayout extends FlexLayout implements RouterLayout {
         // 2026-10-07: the mock's header search bar was dropped — no global search feature
         // exists (or is planned yet) to back it, and a permanently-disabled "(coming soon)"
         // control was judged not worth keeping around. Revisit if/when real search lands.
-        Div right = new Div(lastRefreshed, avatar);
+        Div right = new Div(lastRefreshed, themeSelect(), avatar);
         right.addClassName("bm-header-right");
 
         Div header = new Div(headerTitle, right);
         header.addClassName("bm-header");
         return header;
+    }
+
+    /**
+     * Bad Programmer Frost theme ids: {@code <mode>[-<ground>]}, set as {@code data-theme} on {@code <html>} (see
+     * bp-frost.css). The choice is remembered in the browser's localStorage.
+     */
+    private static final Map<String, String> THEMES = new LinkedHashMap<>();
+
+    static {
+        THEMES.put("light", "Light · Cloud");
+        THEMES.put("light-paper", "Light · Paper");
+        THEMES.put("light-aurora", "Light · Aurora");
+        THEMES.put("dark", "Dark · Midnight");
+        THEMES.put("dark-graphite", "Dark · Graphite");
+        THEMES.put("dark-aurora", "Dark · Aurora");
+    }
+
+    private Select<String> themeSelect() {
+        Select<String> select = new Select<>();
+        select.addClassName("bm-theme-select");
+        select.setAriaLabel("Theme");
+        select.setItems(THEMES.keySet());
+        select.setItemLabelGenerator(THEMES::get);
+        select.setValue("light");
+        select.addValueChangeListener(e -> applyTheme(e.getValue()));
+        // Restore the last choice once the page is attached (the value listener above then applies it).
+        select.addAttachListener(e -> UI.getCurrent().getPage()
+                .executeJs("try{return localStorage.getItem('bp-theme')}catch(e){return null}")
+                .then(String.class, saved -> {
+                    if (saved != null && THEMES.containsKey(saved)) {
+                        select.setValue(saved);
+                    }
+                }));
+        return select;
+    }
+
+    private static void applyTheme(String theme) {
+        UI.getCurrent().getPage().executeJs(
+                "document.documentElement.setAttribute('data-theme', $0);"
+                        + "try{localStorage.setItem('bp-theme', $0)}catch(e){}", theme);
     }
 
     private String latestRefreshLabel() {
